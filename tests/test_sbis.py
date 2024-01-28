@@ -1,11 +1,6 @@
-import pytest
 import time
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service as ChromeService
-from webdriver_manager.chrome import ChromeDriverManager
 from pages.sbis_page import SbisPage
 from pages.sbis_page import partners_not_are_equal, check_download_file
-from selenium.webdriver.chrome.options import Options
 
 
 def test_size_image(driver):
