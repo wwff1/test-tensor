@@ -1,8 +1,9 @@
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 import os.path
 import re
-
 
 BYTE_TO_MEGABYTE_DIVIDER = 1048576
 
@@ -20,7 +21,7 @@ class SbisPage:
         self.list_partners = (By.XPATH, "//div[@id='city-id-2']/ancestor::div[@name='itemsContainer']")
         self.footer = (By.CSS_SELECTOR, "#container > div.sbisru-Footer.sbisru-Footer__scheme--default")
         self.download_button = (By.XPATH, "//a[@href='/download?tab=ereport&innerTab=ereport25']/.")
-        self.menu_download = (By.XPATH, "//div[@name='TabButtons']/div[2]")
+        self.menu_download_sbis_plugin = (By.XPATH, "//div[@name='TabButtons']/div[2]")
         self.download_plugin_file = (
             By.XPATH, "//a[@href='https://update.sbis.ru/Sbis3Plugin/master/win32/sbisplugin-setup-web.exe']/."
         )
@@ -33,47 +34,53 @@ class SbisPage:
     def click_menu_contacts(self):
         """ Клик по разделу "Контакты" """
 
-        self.driver.find_element(*self.menu_contacts).click()
+        WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable(self.menu_contacts)).click()
 
     def click_tensor_logo(self):
         """ Клик по баннеру "Тензор" """
 
-        self.driver.find_element(*self.tensor_logo).click()
+        WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable(self.tensor_logo)).click()
 
     def click_read_more_button(self):
         """ Клик по "Подробнее" в блоке "Сила в людях" """
 
         self.driver.switch_to.window(self.driver.window_handles[1])
-        people_power_parent = self.driver.find_element(*self.block_people_power)
+        people_power_parent = WebDriverWait(self.driver, 10).until(
+            EC.presence_of_element_located(self.block_people_power)
+        )
         read_more_button = people_power_parent.find_element(*self.read_more_button)
         read_more_button.click()
 
     def check_work_image_chronology(self) -> bool:
         """ Проверка размера фотографий хронологии """
 
-        images = self.driver.find_elements(*self.work_image_chronology)
+        images = WebDriverWait(self.driver, 10).until(
+            EC.presence_of_all_elements_located(self.work_image_chronology)
+        )
         return sizes_are_equal([image.size for image in images])
 
     def check_selected_region(self, name_region):
         """ Проверка  выбранного региона """
 
-        default_region = self.driver.find_element(*self.selected_region).text
-        assert default_region == name_region, "Выбран не тот регион"
+        WebDriverWait(self.driver, 10).until(
+            lambda drv: drv.find_element(*self.selected_region).text == name_region,
+            "Выбран не тот регион"
+        )
 
     def click_selected_region(self):
         """ Клик по выбранному региону """
 
-        self.driver.find_element(*self.selected_region).click()
+        WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable(self.selected_region)).click()
 
     def change_region(self, name_region):
         """ Изменение выбранного региона """
 
-        self.driver.find_element(By.XPATH, f"//li/span[text()='{name_region}']").click()
+        WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable((By.XPATH, f"//li/span[text()='{name_region}']"))).click()
 
     def get_list_partners(self):
         """ Получение списока партнеров """
 
-        list_partners = self.driver.find_element(*self.list_partners)
+        list_partners = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(self.list_partners))
         assert list_partners.text, "Список партнеров пуст"
         return list_partners.text
 
@@ -92,24 +99,24 @@ class SbisPage:
     def click_download_button(self):
         """ Клик по "Скачать СБИС" """
 
-        footer = self.driver.find_element(*self.footer)
+        footer = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(self.footer))
         ActionChains(self.driver).scroll_to_element(footer).perform()
-        self.driver.find_element(*self.download_button).click()
+        WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable(self.download_button)).click()
 
     def click_menu_download(self):
         """ Клик по "СБИС Плагин" """
 
-        self.driver.find_element(*self.menu_download).click()
+        WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable(self.menu_download_sbis_plugin)).click()
 
     def click_download_plugin_file(self):
         """ Клик по "Скачать" """
 
-        self.driver.find_element(*self.download_plugin_file).click()
+        WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable(self.download_plugin_file)).click()
 
     def get_plugin_file_size(self):
-        """ Клик по "Скачать" """
+        """ Получение размера файла с сайта """
 
-        plugin_file = self.driver.find_element(*self.download_plugin_file).text
+        plugin_file = WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable(self.download_plugin_file)).text
         size = re.search(r'(\d+\.\d+)', rf'{plugin_file}')
         return float(size.group(0))
 
